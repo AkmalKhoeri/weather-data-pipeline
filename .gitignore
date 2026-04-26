@@ -1,0 +1,21 @@
+# Secret & credentials — JANGAN pernah commit ini
+.env
+credentials.json
+*.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

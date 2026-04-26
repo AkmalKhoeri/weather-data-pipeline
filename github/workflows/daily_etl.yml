@@ -1,0 +1,39 @@
+name: Daily Weather ETL
+
+on:
+  schedule:
+    # Jam 01:00 UTC = 08:00 WIB, setiap hari
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    # Tombol "Run workflow" manual di GitHub Actions tab
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP credentials dari secret
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
+
+      - name: Jalankan ETL pipeline
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: python main.py
+
+      - name: Hapus credentials setelah selesai
+        if: always()
+        run: rm -f credentials.json
