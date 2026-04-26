@@ -1,4 +1,3 @@
-# Secret & credentials — JANGAN pernah commit ini
 .env
 credentials.json
 *.json
