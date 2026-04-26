@@ -59,7 +59,7 @@ def transform(data):
         "weather_desc": data["weather"][0].get("description"),
         "sunrise_utc": str(data["sys"].get("sunrise")),
         "sunset_utc": str(data["sys"].get("sunset")),
-        "fetched_at": datetime.utcnow().isoformat()
+        "fetched_at": datetime.utcnow()
     }
 
 
@@ -71,7 +71,21 @@ def load(rows):
 
     job = client.load_table_from_json(rows, TABLE_REF, job_config=job_config)
     job.result()
-
+def run_dedup():
+    query = """
+    CREATE OR REPLACE TABLE `weather_data.daily_weather_clean` AS
+    SELECT *
+    FROM (
+      SELECT *,
+             ROW_NUMBER() OVER (
+               PARTITION BY city, TIMESTAMP_TRUNC(fetched_at, HOUR)
+               ORDER BY fetched_at DESC
+             ) AS rn
+      FROM `weather_data.daily_weather`
+    )
+    WHERE rn = 1
+    """
+    client.query(query).result()
 
 def main():
     all_rows = []
@@ -83,9 +97,10 @@ def main():
         all_rows.append(cleaned)
 
     load(all_rows)
-
+    run_dedup()
     print("ETL DONE")
 
 
 if __name__ == "__main__":
     main()
+

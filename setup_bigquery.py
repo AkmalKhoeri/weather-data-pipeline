@@ -39,7 +39,7 @@ schema = [
     bigquery.SchemaField("weather_desc", "STRING"),
     bigquery.SchemaField("sunrise_utc", "STRING"),
     bigquery.SchemaField("sunset_utc", "STRING"),
-    bigquery.SchemaField("fetched_at", "STRING", mode="REQUIRED"),
+    bigquery.SchemaField("fetched_at", "TIMESTAMP", mode="REQUIRED"),
 ]
 
 
