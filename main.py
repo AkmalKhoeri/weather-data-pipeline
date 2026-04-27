@@ -72,8 +72,8 @@ def load(rows):
     job = client.load_table_from_json(rows, TABLE_REF, job_config=job_config)
     job.result()
 def run_dedup():
-    query = """
-    CREATE OR REPLACE TABLE `weather_data.daily_weather_clean` AS
+    query = f"""
+    CREATE OR REPLACE TABLE `{PROJECT_ID}.weather_data.daily_weather_clean` AS
     SELECT *
     FROM (
       SELECT *,
@@ -81,9 +81,23 @@ def run_dedup():
                PARTITION BY city, TIMESTAMP_TRUNC(fetched_at, HOUR)
                ORDER BY fetched_at DESC
              ) AS rn
-      FROM `weather_data.daily_weather`
+      FROM `{PROJECT_ID}.weather_data.daily_weather`
     )
     WHERE rn = 1
+    """
+    client.query(query).result()
+
+def run_mart():
+    query = f"""
+    CREATE OR REPLACE VIEW `{PROJECT_ID}.weather_data.weather_mart` AS
+    SELECT
+      city,
+      DATE(fetched_at) AS date,
+      AVG(temp_c) AS avg_temp,
+      AVG(humidity_pct) AS avg_humidity,
+      AVG(wind_speed_ms) AS avg_wind
+    FROM `{PROJECT_ID}.weather_data.daily_weather_clean`
+    GROUP BY city, date
     """
     client.query(query).result()
 
@@ -98,6 +112,8 @@ def main():
 
     load(all_rows)
     run_dedup()
+    run_mart()  
+
     print("ETL DONE")
 
 
